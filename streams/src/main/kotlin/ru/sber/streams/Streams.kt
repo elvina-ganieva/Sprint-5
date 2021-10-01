@@ -3,12 +3,10 @@ package ru.sber.streams
 
 // 1. Используя withIndex() посчитать сумму элементов листа, индекс которых кратен 3. (нулевой индекс тоже входит)
 fun getSumWithIndexDivisibleByThree(list: List<Long>): Long {
-    var sum: Long = 0
-
-    list.withIndex()
+    return list.asSequence()
+        .withIndex()
         .filter { it.index % 3 == 0 }
-        .map { sum += it.value }
-    return sum
+        .sumOf { it.value }
 }
 
 // 2. Используя функцию generateSequence() создать последовательность, возвращающую числа Фибоначчи.
@@ -23,12 +21,10 @@ fun Shop.getCustomersCities(): Set<City> {
 
 // 4. Получить все когда-либо заказанные продукты.
 fun Shop.allOrderedProducts(): Set<Product> {
-    val res = customers
-        .flatMap { customer ->
-            customer.orders
-                .flatMap { it.products }
-        }.toSet()
-    return res
+    val result = customers.flatMap { customer ->
+        customer.orders.flatMap { it.products }
+    }.toSet()
+    return result
 }
 
 // 5. Получить покупателя, который сделал больше всего заказов.
@@ -38,58 +34,42 @@ fun Shop.getCustomerWithMaximumNumberOfOrders(): Customer? {
 
 // 6. Получить самый дорогой продукт, когда-либо приобртенный покупателем.
 fun Customer.getMostExpensiveProduct(): Product? {
-    val res = orders.map { order ->
-        order.products
-            .maxByOrNull { product -> product.price }
-    }.maxByOrNull { product -> product!!.price }
-    return res
+    return orders.flatMap { it.products }.maxByOrNull { it.price }
 }
 
 // 7. Получить соответствие в мапе: город - количество заказанных и доставленных продуктов в данный город.
 fun Shop.getNumberOfDeliveredProductByCity(): Map<City, Int> {
-    val cityAndListOfSumsPerCustomer = customers.groupBy(keySelector = { it.city },
+    val result = customers.groupBy(
+        keySelector = { it.city },
         valueTransform = {
-            it.orders
+            it.orders.asSequence()
                 .filter { order -> order.isDelivered }
                 .sumOf { order -> order.products.size }
-        })
-    val res = cityAndListOfSumsPerCustomer.asSequence()
-        .associateBy(keySelector = { it.key },
-            valueTransform = { it.value.sum() }
-        )
-    return res
+        }).mapValues { it.value.sum() }
+    return result
 }
 
 // 8. Получить соответствие в мапе: город - самый популярный продукт в городе.
 fun Shop.getMostPopularProductInCity(): Map<City, Product> {
-    val cityAndListsOfProducts = customers.groupBy(keySelector = { it.city },
+    val result = customers.groupBy(
+        keySelector = { it.city },
         valueTransform = {
-            it.orders
-                .map { order -> order.products }
-        })
-    val cityAndMapOfProductAndQuantity = cityAndListsOfProducts.asSequence()
-        .associateBy(keySelector = { it.key },
-            valueTransform = {
-                it.value.flatten().flatten()
-                    .groupingBy { product: Product -> product }.eachCount()
-            })
-    val result = cityAndMapOfProductAndQuantity.asSequence()
-        .associateBy(keySelector = { it.key },
-            valueTransform = {
-                it.value.maxByOrNull { it1 -> it1.value }!!.key
-            })
+            it.orders.flatMap { order -> order.products }
+        }).mapValues {
+        it.value.flatten()
+            .groupingBy { product: Product -> product }
+            .eachCount()
+    }.mapValues { it.value.maxByOrNull { product -> product.value }!!.key }
     return result
 }
 
 // 9. Получить набор товаров, которые заказывали все покупатели.
 fun Shop.getProductsOrderedByAll(): Set<Product> {
-    val set = mutableSetOf<Product>()
+    val result = mutableSetOf<Product>()
 
-    val customersAndListsOfProducts = customers
-        .associateBy(keySelector = { it },
-            valueTransform = { it.orders.map { order -> order.products }.flatten().toSet() })
-    customersAndListsOfProducts.values.withIndex()
-        .forEach { if (it.index == 0) set.addAll(it.value) else set.retainAll(it.value) }
-    return set
+    customers.associateWith {
+        it.orders.flatMap { order -> order.products }.distinct()
+    }.values.withIndex()
+        .forEach { if (it.index == 0) result.addAll(it.value) else result.retainAll(it.value) }
+    return result
 }
-
