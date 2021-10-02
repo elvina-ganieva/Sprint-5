@@ -19,6 +19,4 @@ data class Client1(
     val passportSerial: String,
     @JsonAlias("BIRTHDATE")
     val birthDate: LocalDate
-
-    //TODO:https://docs.microsoft.com/en-us/dotnet/standard/serialization/system-text-json-customize-properties?pivots=dotnet-5-0
 )
