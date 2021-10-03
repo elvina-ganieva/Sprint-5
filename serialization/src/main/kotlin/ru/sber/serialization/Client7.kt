@@ -5,17 +5,17 @@ import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonDeserializer
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 
-@JsonDeserialize(using = ClientDeserializer::class)
+@JsonDeserialize(using = Client7Deserializer::class)
 data class Client7(
     val firstName: String,
     val lastName: String,
     val middleName: String,
 )
 
-class ClientDeserializer: JsonDeserializer<Client7>() {
+class Client7Deserializer : JsonDeserializer<Client7>() {
     override fun deserialize(p0: JsonParser?, p1: DeserializationContext?): Client7 {
         p0!!.nextTextValue()
-        val value = p0.nextTextValue()?.split("\\s+".toRegex())
-        return Client7(value!![1], value[0], value[2])
+        val value = p0.nextTextValue()!!.trim().split("\\s+".toRegex())
+        return Client7(value[1], value[0], value[2])
     }
 }

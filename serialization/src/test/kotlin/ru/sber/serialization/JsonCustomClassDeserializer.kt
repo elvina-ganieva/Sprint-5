@@ -26,3 +26,4 @@ class JsonCustomClassDeserializer {
         assertEquals("Иванович", client.middleName)
     }
 }
+

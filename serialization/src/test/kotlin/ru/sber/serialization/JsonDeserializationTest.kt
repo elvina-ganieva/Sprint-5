@@ -42,7 +42,6 @@ class JsonDeserializationTest {
             .registerModules(KotlinModule(), JavaTimeModule())
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
 
-
         // when
         val client = objectMapper.readValue<Client1>(data)
 
